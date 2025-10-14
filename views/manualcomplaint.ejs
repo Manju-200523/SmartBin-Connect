@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Submit Complaint</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 40px; }
+    h2 { text-align: center; color: #333; }
+    form { max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input[type="text"], textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+    textarea { resize: vertical; min-height: 80px; }
+    button { margin-top: 20px; padding: 10px 20px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    #status { margin-top: 10px; color: gray; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+  <h2>Submit a Complaint</h2>
+
+  <!-- Form posts to /hash-complaint; ID generated on backend -->
+  <form id="complaintForm" action="/complaint-submit" method="POST">
+    
+    <label for="name">Name:</label>
+    <input type="text" name="name" id="name" placeholder="Enter your name" required>
+
+    <label for="issue">Complaint:</label>
+    <textarea name="issue" id="issue" placeholder="Describe your complaint" required></textarea>
+
+    <label for="location">Location:</label>
+    <input type="text" id="location" name="location" placeholder="Enter location manually or use button" required>
+
+    <!-- Hidden latitude and longitude -->
+    <input type="hidden" id="lat" name="latitude">
+    <input type="hidden" id="lon" name="longitude">
+
+    <button type="button" id="useLocationBtn">Use My Location</button>
+    <button type="submit">Submit Complaint</button>
+
+    <p id="status"></p>
+  </form>
+
+  <script>
+    const useBtn = document.getElementById('useLocationBtn');
+    const status = document.getElementById('status');
+    const locInput = document.getElementById('location');
+    const latField = document.getElementById('lat');
+    const lonField = document.getElementById('lon');
+
+    useBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        status.textContent = 'Geolocation not supported by your browser.';
+        return;
+      }
+
+      status.textContent = 'Obtaining location... please allow permission.';
+      navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 20000 });
+    });
+
+    async function success(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      latField.value = lat;
+      lonField.value = lon;
+
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const data = await response.json();
+        locInput.value = data.display_name || `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+        status.textContent = 'Location filled! You can edit it if needed.';
+      } catch (err) {
+        console.error(err);
+        locInput.value = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+        status.textContent = 'Could not fetch address. You can edit manually.';
+      }
+    }
+
+    function error(err) {
+      if (err.code === 1) status.textContent = 'Permission denied. Please type location manually.';
+      else if (err.code === 2) status.textContent = 'Position unavailable. Type location manually.';
+      else if (err.code === 3) status.textContent = 'Timeout. Try again or type manually.';
+      else status.textContent = 'Unable to get location. Type manually.';
+    }
+  </script>
+
+</body>
+</html>
