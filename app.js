@@ -10,8 +10,14 @@ const fs = require('fs');
 const Complaint = require('./models/complaintSchema.js'); // your existing schema
 //const uploads = require('./multer'); // your multer setup
 const methodOverride = require('method-override');
+const response = await huggingFaceAPI(token, inputData);
 
-const HUGGINGFACE_API_KEY = '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';
+
+require('dotenv').config({ path: './hugging.env' }); // <-- load hugging.env
+const token = process.env.HUGGING_FACE_TOKEN;
+
+
+
 const MODEL_ID = 'google/vit-base-patch16-224';
 
 app.use(express.urlencoded({ extended: true })); // for form submissions
@@ -108,7 +114,7 @@ app.post('/detect-issue', upload.single('image'), async (req, res) => {
       { inputs: imageBytes },
       {
         headers: {
-          Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       }
