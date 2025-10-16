@@ -6,7 +6,7 @@ function generateCode() {
 
 const complaintSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  issue: { type: String, required: true },
+  issue: { type: String, required: false },
   location: { type: String, required: true },
   latitude: { type: Number },
   longitude: { type: Number },

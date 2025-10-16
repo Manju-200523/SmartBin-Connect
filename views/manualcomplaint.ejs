@@ -19,7 +19,6 @@
 
   <h2>Submit a Complaint</h2>
 
-  <!-- Form posts to /hash-complaint; ID generated on backend -->
   <form id="complaintForm" action="/complaint-submit" method="POST">
     
     <label for="name">Name:</label>
@@ -31,7 +30,6 @@
     <label for="location">Location:</label>
     <input type="text" id="location" name="location" placeholder="Enter location manually or use button" required>
 
-    <!-- Hidden latitude and longitude -->
     <input type="hidden" id="lat" name="latitude">
     <input type="hidden" id="lon" name="longitude">
 
@@ -55,35 +53,26 @@
       }
 
       status.textContent = 'Obtaining location... please allow permission.';
-      navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 20000 });
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        latField.value = latitude;
+        lonField.value = longitude;
+
+        try {
+          // ✅ Using same working API from image upload route
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+          const data = await response.json();
+          locInput.value = data.display_name || `Lat: ${latitude.toFixed(6)}, Lon: ${longitude.toFixed(6)}`;
+          status.textContent = 'Location filled successfully!';
+        } catch (err) {
+          console.error('Reverse geocoding failed:', err);
+          locInput.value = `Lat: ${latitude.toFixed(6)}, Lon: ${longitude.toFixed(6)}`;
+          status.textContent = 'Could not fetch address. Edit manually if needed.';
+        }
+      }, (error) => {
+        status.textContent = 'Unable to get location. Please type manually.';
+      }, { enableHighAccuracy: true, timeout: 20000 });
     });
-
-    async function success(position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-
-      latField.value = lat;
-      lonField.value = lon;
-
-      try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-        const data = await response.json();
-        locInput.value = data.display_name || `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
-        status.textContent = 'Location filled! You can edit it if needed.';
-      } catch (err) {
-        console.error(err);
-        locInput.value = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
-        status.textContent = 'Could not fetch address. You can edit manually.';
-      }
-    }
-
-    function error(err) {
-      if (err.code === 1) status.textContent = 'Permission denied. Please type location manually.';
-      else if (err.code === 2) status.textContent = 'Position unavailable. Type location manually.';
-      else if (err.code === 3) status.textContent = 'Timeout. Try again or type manually.';
-      else status.textContent = 'Unable to get location. Type manually.';
-    }
   </script>
-
 </body>
 </html>

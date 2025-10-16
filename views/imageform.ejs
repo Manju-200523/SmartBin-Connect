@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Bin Complaint</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 50px; background: #f8f8f8; }
+    form { background: white; padding: 30px; border-radius: 10px; width: 400px; margin: auto; }
+    input, button { margin: 10px 0; width: 100%; padding: 8px; }
+    img { margin-top: 10px; max-width: 100%; display: none; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h2 align="center">📸 Smart Bin Complaint Form</h2>
+  <form id="complaintForm" action="/image-submit" method="POST" enctype="multipart/form-data">
+    <label>Name:</label>
+    <input type="text" name="name" placeholder="Enter your name">
+
+    <label>Upload Image:</label>
+    <input type="file" name="image" id="imageInput" accept="image/*" required>
+    <img id="preview" alt="Image preview">
+
+    <label>Detected Issue:</label>
+    <input type="text" name="issue" id="issue" readonly placeholder="(Auto-detected)">
+
+    <label>Location:</label>
+    <input type="text" name="location" id="location" placeholder="Enter location manually or use button">
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+
+    <button type="button" onclick="getLocation()">📍 Use My Current Location</button>
+    <button type="submit">Submit Complaint</button>
+  </form>
+
+  <script>
+    // 🌍 Auto Location Fill
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async function(pos) {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          document.getElementById('latitude').value = lat;
+          document.getElementById('longitude').value = lon;
+
+          // Get readable address using reverse geocoding
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+          const data = await res.json();
+          document.getElementById('location').value = data.display_name || "Unknown location";
+        });
+      } else {
+        alert("Geolocation not supported by this browser.");
+      }
+    }
+
+    // 🧠 Preview image & send to backend for detection
+    document.getElementById('imageInput').addEventListener('change', async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // show preview
+      const imgPreview = document.getElementById('preview');
+      imgPreview.src = URL.createObjectURL(file);
+      imgPreview.style.display = 'block';
+
+      // send to backend for ML detection (temporary API)
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/detect-issue', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      document.getElementById('issue').value = data.issue || "Unable to detect";
+    });
+  </script>
+</body>
+</html>

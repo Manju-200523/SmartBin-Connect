@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Bin Voice Complaint</title>
+  <style>
+    body { font-family: Arial; max-width: 700px; margin:auto; padding:1rem; }
+    input, textarea { width:100%; margin:5px 0; padding:0.5rem; }
+    button { padding:0.5rem 1rem; margin:5px 2px; }
+    #status { font-weight:bold; margin-left:10px; }
+  </style>
+</head>
+<body>
+  <h2>Voice Complaint Form</h2>
+
+  <button id="startBtn">Start Voice</button>
+  <button id="stopBtn" disabled>Stop</button>
+  <span id="status"></span>
+
+  <form action="/voice-submit" method="POST">
+    <div>
+      <label>Name:</label>
+      <input type="text" name="name" id="name" placeholder="Your name">
+    </div>
+    <div>
+      <label>Issue:</label>
+      <input type="text" name="issue" id="issue" placeholder="Describe the issue" required>
+    </div>
+    <div>
+      <label>Location:</label>
+      <input type="text" name="location" id="location" placeholder="Address" required>
+    </div>
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+    <button type="submit">Submit Complaint</button>
+  </form>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusEl = document.getElementById('status');
+    const nameInput = document.getElementById('name');
+    const issueInput = document.getElementById('issue');
+    const locationInput = document.getElementById('location');
+    const latInput = document.getElementById('latitude');
+    const lonInput = document.getElementById('longitude');
+
+    let recognition;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-IN';
+
+      recognition.onstart = () => {
+        statusEl.textContent = '🎙️ Listening...';
+        startBtn.disabled = true; stopBtn.disabled = false;
+      };
+      recognition.onerror = (e) => {
+        console.error(e);
+        statusEl.textContent = 'Error: ' + e.error;
+      };
+      recognition.onend = () => {
+        statusEl.textContent = '🛑 Stopped';
+        startBtn.disabled = false; stopBtn.disabled = true;
+      };
+      recognition.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript + ' ';
+        }
+        issueInput.value = finalTranscript.trim();
+        runNlp(finalTranscript.trim());
+      };
+    } else {
+      statusEl.textContent = 'Speech recognition not supported';
+      startBtn.disabled = true;
+    }
+
+    startBtn.addEventListener('click', () => recognition.start());
+    stopBtn.addEventListener('click', () => recognition.stop());
+
+    // ----- NLP + Location (fixed) -----
+    async function runNlp(text) {
+      text = text.trim();
+
+      const nameMatch = text.match(/\b(my name is|i am|this is|i'm)\s+([A-Z][a-z]+)\b/i);
+      if (nameMatch) nameInput.value = nameMatch[2];
+
+      const keywords = ['overflow', 'smell', 'bin full', 'spill', 'broken', 'rats'];
+      for (let k of keywords) {
+        if (text.toLowerCase().includes(k)) { issueInput.value = k; break; }
+      }
+
+      // ✅ Correct reverse geocoding (same as image route)
+      if (navigator.geolocation) {
+        statusEl.textContent = '📍 Getting location...';
+        navigator.geolocation.getCurrentPosition(async pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          latInput.value = lat;
+          lonInput.value = lon;
+
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+            const data = await res.json();
+            locationInput.value = data.display_name || `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+            statusEl.textContent = '✅ Location filled!';
+          } catch (err) {
+            console.warn('Reverse geocode failed', err);
+            locationInput.value = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+            statusEl.textContent = '⚠️ Address lookup failed';
+          }
+        }, () => {
+          statusEl.textContent = '⚠️ Could not fetch location';
+        }, { enableHighAccuracy: true, timeout: 20000 });
+      }
+    }
+  </script>
+</body>
+</html>
