@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Bin Dashboard</title>
+  <style>
+    body { font-family: Arial; background: #f8f9fa; margin: 20px; }
+    h1 { color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #4CAF50; color: white; }
+    button { background: #4CAF50; color: white; padding: 5px 10px; border: none; cursor: pointer; }
+    button:hover { background: #45a049; }
+    .form-section { margin-top: 30px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+
+    /* 🗑️ BIN LEVEL ROW COLORS */
+    .low-level { background-color: #d4edda; }     /* light green */
+    .medium-level { background-color: #fff3cd; }  /* light orange */
+    .high-level { background-color: #ce0a1a; }    /* light red */
+
+    /* 🧾 COMPLAINT STATUS COLORS */
+    .pending-status { background-color: #f8d7da; }   /* light red */
+    .resolved-status { background-color: #d4edda; }  /* light green */
+  </style>
+</head>
+<body>
+  <h1>🗑️ Smart Bin Monitoring Dashboard</h1>
+
+  <h2>Bin Logs</h2>
+  <table id="logsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Bin ID</th>
+        <th>Level (%)</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Complaints</h2>
+  <table id="complaintsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Bin ID</th>
+        <th>Issue</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="form-section">
+    <h3>Add Manual Complaint</h3>
+    <input type="text" id="binId" placeholder="Bin ID">
+    <input type="text" id="issue" placeholder="Issue description">
+    <button onclick="addComplaint()">Submit</button>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+
+    // ✅ FETCH BIN LOGS WITH ROW BACKGROUND COLOR
+    async function fetchLogs() {
+      const res = await fetch(`${API_BASE}/logs`);
+      const data = await res.json();
+      const tableBody = document.querySelector('#logsTable tbody');
+      tableBody.innerHTML = '';
+
+      data.forEach(log => {
+        let rowClass;
+
+        // 🧠 Determine row background color class
+        if (log.bin_level > 80) {
+          rowClass = 'high-level';      // 🔴 red background
+        } else if (log.bin_level > 50) {
+          rowClass = 'medium-level';    // 🟠 orange background
+        } else {
+          rowClass = 'low-level';       // 🟢 green background
+        }
+
+        const row = `
+          <tr class="${rowClass}">
+            <td>${log.id}</td>
+            <td>${log.bin_id}</td>
+            <td><b>${log.bin_level}%</b></td>
+            <td>${log.latitude}</td>
+            <td>${log.longitude}</td>
+            <td>${new Date(log.timestamp).toLocaleString()}</td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    // ✅ FETCH COMPLAINTS WITH COLOR FOR STATUS
+    async function fetchComplaints() {
+      const res = await fetch(`${API_BASE}/complaints`);
+      const data = await res.json();
+      const tableBody = document.querySelector('#complaintsTable tbody');
+      tableBody.innerHTML = '';
+
+      data.forEach(c => {
+        const rowClass = c.status === 'Pending' ? 'pending-status' : 'resolved-status';
+
+        const row = `
+          <tr class="${rowClass}">
+            <td>${c.id}</td>
+            <td>${c.bin_id}</td>
+            <td>${c.issue}</td>
+            <td><b>${c.status}</b></td>
+            <td>${c.status === 'Pending' ? `<button onclick="resolveComplaint(${c.id})">Resolve</button>` : '✅'}</td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    // ✅ ADD MANUAL COMPLAINT
+    async function addComplaint() {
+      const bin_id = document.getElementById('binId').value;
+      const issue = document.getElementById('issue').value;
+
+      if (!bin_id || !issue) {
+        alert('Please fill in both fields!');
+        return;
+      }
+
+      await fetch(`${API_BASE}/complaints/manual`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ bin_id, issue })
+      });
+
+      alert('Complaint submitted!');
+      fetchComplaints();
+    }
+
+    // ✅ RESOLVE COMPLAINT
+    async function resolveComplaint(id) {
+      await fetch(`${API_BASE}/complaints/${id}/resolve`, { method: 'PUT' });
+      fetchComplaints();
+    }
+
+    // ✅ INITIAL LOAD
+    fetchLogs();
+    fetchComplaints();
+  </script>
+</body>
+</html>
