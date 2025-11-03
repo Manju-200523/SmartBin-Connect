@@ -1,0 +1,31 @@
+[
+  {
+    "sensorId": "sensor_001",
+    "binStatus": "full",
+    "location": "Keshav Krupa, Bengaluru",
+    "latitude": 12.97,
+    "longitude": 77.59
+  },
+  {
+    "sensorId": "sensor_002",
+    "binStatus": "overflow",
+    "location": "MG Road, Bengaluru",
+    "latitude": 12.98,
+    "longitude": 77.60
+  },
+  {
+    "sensorId": "sensor_003",
+    "binStatus": "full",
+    "location": "Jayanagar, Bengaluru",
+    "latitude": 12.92,
+    "longitude": 77.58
+  },
+  {
+    "sensorId": "sensor_004",
+    "binStatus": "overflow",
+    "location": "Whitefield, Bengaluru",
+    "latitude": 12.97,
+    "longitude": 77.70
+  }
+]
+
