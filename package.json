@@ -10,15 +10,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tensorflow-models/mobilenet": "^2.1.1",
-    "@tensorflow/tfjs-node": "^4.22.0",
     "axios": "^1.12.2",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "jpeg-js": "^0.4.4",
     "method-override": "^3.0.0",
-    "mongoose": "^8.19.1",
+    "mongoose": "^8.19.3",
     "multer": "^2.0.2"
   }
 }
