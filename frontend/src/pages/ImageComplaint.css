@@ -1,0 +1,74 @@
+.image-wrapper {
+  max-width: 520px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.image-title {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.image-form {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.image-label {
+  margin-top: 15px;
+  display: block;
+  font-weight: 600;
+}
+
+.image-input,
+.image-file {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.image-preview {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 10px;
+}
+
+.detect-btn,
+.loc-btn,
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 1rem;
+  color: white;
+}
+
+.detect-btn {
+  background: #6f42c1;
+}
+.detect-btn:hover {
+  background: #5937a0;
+}
+
+.loc-btn {
+  background: #007bff;
+}
+.loc-btn:hover {
+  background: #005fcc;
+}
+
+.submit-btn {
+  background: #28a745;
+}
+.submit-btn:hover {
+  background: #218838;
+}

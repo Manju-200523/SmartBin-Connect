@@ -1,0 +1,40 @@
+.complaint-table {
+  width: 90%;
+  margin: 30px auto;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.complaint-table th,
+.complaint-table td {
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.complaint-table th {
+  background: #f4f4f4;
+}
+
+.resolve-btn {
+  background: #28a745;
+  padding: 6px 12px;
+  color: white;
+  margin-right: 6px;
+  border-radius: 6px;
+}
+
+.close-btn {
+  background: #dc3545;
+  padding: 6px 12px;
+  color: white;
+  margin-right: 6px;
+  border-radius: 6px;
+}
+
+.pending-btn {
+  background: #ffc107;
+  padding: 6px 12px;
+  color: black;
+  border-radius: 6px;
+}
