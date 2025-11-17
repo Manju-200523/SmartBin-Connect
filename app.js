@@ -18,8 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(require("cors")());
 
 // MongoDB
-mongoose
-  .connect("mongodb://localhost:27017/complaintsDB")
+mongoose.connect(process.env.MONGO_URI)
+
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.log("❌ Mongo error:", err.message));
 
@@ -138,26 +138,46 @@ app.post("/api/complaints/image", upload.single("image"), async (req, res) => {
 // ===================================================
 // ✅ AUTO COMPLAINT (Arduino / IoT)
 // ===================================================
+// ===================================================
+// ✅ AUTO COMPLAINT (Arduino / IoT)
+// ===================================================
 app.post("/api/complaints/auto", async (req, res) => {
   try {
     const { sensorId, binStatus, location, latitude, longitude } = req.body;
 
+    // Validate required
+    if (!sensorId || !binStatus || !location) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: sensorId, binStatus, location"
+      });
+    }
+
+    // Generate issue text
     let issue = "General bin issue";
     if (binStatus === "full") issue = "Bin is full";
     if (binStatus === "overflow") issue = "Bin overflow detected";
 
-    const c = await Complaint.create({
-      name: "Auto Generated",
+    // Create complaint
+    const complaint = await Complaint.create({
+      name: sensorId,
       issue,
       location,
       latitude,
       longitude,
       type: "auto",
+      status: "pending"
     });
 
-    res.json({ success: true, complaint: c });
+    // Response
+    res.json({
+      success: true,
+      message: "Auto complaint generated successfully",
+      complaint
+    });
+
   } catch (err) {
-    console.error("Auto error:", err);
+    console.error("Auto Complaint Error:", err);
     res.status(500).json({ success: false });
   }
 });
