@@ -11,6 +11,7 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const Complaint = require("./models/complaintSchema.js");
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json({ limit: "5mb" }));
