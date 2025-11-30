@@ -2,9 +2,9 @@
   "name": "smart-bin-connect",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "app.cjs",
   "scripts": {
-    "start": "node app.js",
+    "start": "node app.cjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
