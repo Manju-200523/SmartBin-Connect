@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "../api/axios";
+import {
+  getAllComplaints,
+  updateComplaintStatus,
+} from "../api/complaints"; // ✅ use shared API
 
 const Dashboard = () => {
   const [complaints, setComplaints] = useState([]);
@@ -7,7 +10,8 @@ const Dashboard = () => {
   // ✅ Fetch all complaints from backend
   const loadComplaints = async () => {
     try {
-      const res = await axios.get("/api/complaints");
+      const res = await getAllComplaints();
+      // if axios: res.data is the array
       setComplaints(res.data);
     } catch (err) {
       console.error("Error loading complaints", err);
@@ -19,15 +23,13 @@ const Dashboard = () => {
   }, []);
 
   // ✅ Update status only (B — your option)
-  const updateStatus = async (id, newStatus) => {
+  const handleUpdateStatus = async (id, newStatus) => {
     try {
-      await axios.patch(`/api/complaints/${id}/status`, { status: newStatus });
+      await updateComplaintStatus(id, newStatus);
 
       // ✅ Update UI instantly
       setComplaints((prev) =>
-        prev.map((c) =>
-          c._id === id ? { ...c, status: newStatus } : c
-        )
+        prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
       );
     } catch (err) {
       console.error("Status update failed", err);
@@ -41,23 +43,33 @@ const Dashboard = () => {
       <div style={grid}>
         {complaints.map((c) => (
           <div key={c._id} style={card}>
-            <p><b>Name:</b> {c.name}</p>
-            <p><b>Issue:</b> {c.issue}</p>
-            <p><b>Location:</b> {c.location}</p>
-            <p><b>Type:</b> {c.type}</p>
+            <p>
+              <b>Name:</b> {c.name}
+            </p>
+            <p>
+              <b>Issue:</b> {c.issue}
+            </p>
+            <p>
+              <b>Location:</b> {c.location}
+            </p>
+            <p>
+              <b>Type:</b> {c.type}
+            </p>
 
             <p>
               <b>Status:</b>{" "}
-              <span style={{
-                ...badge,
-                background:
-                  c.status === "pending"
-                    ? "#ffc107"
-                    : c.status === "in-progress"
-                    ? "#0dcaf0"
-                    : "green",
-                color: "white"
-              }}>
+              <span
+                style={{
+                  ...badge,
+                  background:
+                    c.status === "pending"
+                      ? "#ffc107"
+                      : c.status === "in-progress"
+                      ? "#0dcaf0"
+                      : "green",
+                  color: "white",
+                }}
+              >
                 {c.status}
               </span>
             </p>
@@ -67,7 +79,7 @@ const Dashboard = () => {
               {c.status === "pending" && (
                 <button
                   style={btnBlue}
-                  onClick={() => updateStatus(c._id, "in-progress")}
+                  onClick={() => handleUpdateStatus(c._id, "in-progress")}
                 >
                   Start
                 </button>
@@ -76,7 +88,7 @@ const Dashboard = () => {
               {c.status !== "resolved" && (
                 <button
                   style={btnGreen}
-                  onClick={() => updateStatus(c._id, "resolved")}
+                  onClick={() => handleUpdateStatus(c._id, "resolved")}
                 >
                   ✅ Resolve
                 </button>
@@ -103,7 +115,7 @@ const card = {
   background: "#fff",
   padding: "15px",
   borderRadius: "10px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
   display: "flex",
   flexDirection: "column",
   gap: "8px",
